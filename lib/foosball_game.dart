@@ -8,8 +8,11 @@ import 'components/player_figure.dart';
 import 'components/slider.dart';
 import 'pitch.dart';
 
-class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
+class FoosballGame extends Forge2DGame implements ContactListener {
   FoosballGame() : super(gravity: Vector2.zero());
+
+  @override
+  bool get debugMode => true;
 
   late List<FoosballRod> greenRods;
   late List<FoosballRod> redRods;
@@ -18,19 +21,26 @@ class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
   int redScore = 0;
 
   @override
+  Color backgroundColor() => const Color(0xFF1A1A1A);
+
+  @override
   Future<void> onLoad() async {
     await super.onLoad();
     
-    camera.viewport = FixedResolutionViewport(resolution: Vector2(1280, 800));
-    camera.viewfinder.zoom = 800;
+    // Register for contact callbacks
+    world.physicsWorld.setContactListener(this);
+    
+    // Modern Flame camera: Center on the pitch
+    camera.viewfinder.visibleGameSize = Vector2(1.5, 1.0); 
     camera.viewfinder.position = Vector2(0.6, 0.4);
     camera.viewfinder.anchor = Anchor.center;
 
     final pitchSize = Vector2(1.2, 0.8);
-    add(Pitch(size: pitchSize, onGoal: _handleGoal));
+    // Add game objects to the WORLD so the camera can see them
+    world.add(Pitch(size: pitchSize, onGoal: _handleGoal));
     
-    // Sliders
-    final greenSlider = FoosballSlider(
+    // Sliders stay on the GAME (HUD/Screen space)
+    add(FoosballSlider(
       position: Vector2(-0.15, 0.1),
       size: Vector2(0.08, 0.6),
       color: Colors.green,
@@ -39,9 +49,9 @@ class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
           rod.updateY(val);
         }
       },
-    );
+    ));
     
-    final redSlider = FoosballSlider(
+    add(FoosballSlider(
       position: Vector2(pitchSize.x + 0.07, 0.1),
       size: Vector2(0.08, 0.6),
       color: Colors.red,
@@ -50,10 +60,7 @@ class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
           rod.updateY(val);
         }
       },
-    );
-
-    add(greenSlider);
-    add(redSlider);
+    ));
 
     // Initialize Rods
     greenRods = [
@@ -66,15 +73,14 @@ class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
         FoosballRod(x: 1.05, team: Team.red, playerOffsets: [-0.15, 0.15], pitchHeight: pitchSize.y),
     ];
 
-    addAll(greenRods);
-    addAll(redRods);
+    world.addAll(greenRods);
+    world.addAll(redRods);
     
     _resetBall();
   }
 
   void _resetBall() {
-    final ball = FoosballBall(initialPosition: Vector2(0.6, 0.4));
-    add(ball);
+    world.add(FoosballBall(initialPosition: Vector2(0.6, 0.4)));
   }
 
   void _handleGoal(Team team) {
@@ -102,4 +108,13 @@ class FoosballGame extends Forge2DGame with HasCallbacks, ContactCallbacks {
         _handleGoal(dataB);
     }
   }
+
+  @override
+  void endContact(Contact contact) {}
+
+  @override
+  void postSolve(Contact contact, ContactImpulse impulse) {}
+
+  @override
+  void preSolve(Contact contact, Manifold oldManifold) {}
 }

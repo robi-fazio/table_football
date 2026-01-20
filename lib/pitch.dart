@@ -1,11 +1,12 @@
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/material.dart';
+import 'components/player_figure.dart';
 
 class Pitch extends BodyComponent {
   final Vector2 size;
   final void Function(Team) onGoal;
 
-  Pitch({required this.size, required this.onGoal});
+  Pitch({required this.size, required this.onGoal}) : super(priority: -1);
 
   @override
   Body createBody() {

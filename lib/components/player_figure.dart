@@ -42,7 +42,7 @@ class PlayerFigure extends BodyComponent {
     footShape.setAsBox(0.015, 0.045, Vector2(0, 0), 0);
     footBody.createFixture(FixtureDef(footShape, density: 5.0, friction: 0.5, restitution: 0.2));
 
-    // RevoltJoint to connect them
+    // RevoluteJoint to connect them
     final jointDef = RevoluteJointDef()
       ..initialize(body, footBody, body.position)
       ..enableLimit = true
@@ -52,7 +52,8 @@ class PlayerFigure extends BodyComponent {
       ..maxMotorTorque = 100.0
       ..motorSpeed = 0.0;
     
-    joint = world.createJoint(jointDef) as RevoluteJoint;
+    joint = RevoluteJoint(jointDef);
+    world.createJoint(joint);
 
     return body;
   }
@@ -60,8 +61,6 @@ class PlayerFigure extends BodyComponent {
   void updatePosition(double newY) {
     if (isLoaded) {
       body.setTransform(Vector2(rodPosition.x, newY), body.angle);
-      // Foot follows body (joint handles this, but we need to keep foot "synced" if kinematic body teleports)
-      // Actually with a joint, the foot will follow.
     }
   }
 
@@ -69,13 +68,13 @@ class PlayerFigure extends BodyComponent {
     // Set motor speed for a quick snap
     final speed = directionRight ? 50.0 : -50.0;
     joint.setLimits(directionRight ? 0.0 : -1.5, directionRight ? 1.5 : 0.0);
-    joint.setMotorSpeed(speed);
+    joint.motorSpeed = speed;
     
     // Reset after a short delay
     Future.delayed(const Duration(milliseconds: 150), () {
       if (isLoaded) {
           joint.setLimits(-0.1, 0.1);
-          joint.setMotorSpeed(-speed);
+          joint.motorSpeed = -speed;
       }
     });
   }
