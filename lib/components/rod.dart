@@ -11,8 +11,6 @@ class FoosballRod extends Component {
   final double pitchHeight;
   
   late final List<PlayerFigure> players;
-  late final PositionComponent topHandle;
-  late final PositionComponent bottomHandle;
   
   double _currentY = 0.4;
 
@@ -32,52 +30,6 @@ class FoosballRod extends Component {
         rodY: _currentY + offset,
       );
     }).toList();
-    
-    addAll(players);
-
-    // Add handles with buttons
-    topHandle = PositionComponent(
-      position: Vector2(x - 0.04, -0.08),
-      size: Vector2(0.08, 0.06),
-    );
-    bottomHandle = PositionComponent(
-      position: Vector2(x - 0.04, pitchHeight + 0.02),
-      size: Vector2(0.08, 0.06),
-    );
-
-    final btnSize = Vector2(0.03, 0.04);
-    
-    topHandle.add(KickButton(
-      position: Vector2(0.005, 0.01),
-      size: btnSize,
-      isRight: false,
-      color: Colors.white,
-      onTap: () => kick(false),
-    ));
-    topHandle.add(KickButton(
-      position: Vector2(0.045, 0.01),
-      size: btnSize,
-      isRight: true,
-      color: Colors.white,
-      onTap: () => kick(true),
-    ));
-
-    bottomHandle.add(KickButton(
-      position: Vector2(0.005, 0.01),
-      size: btnSize,
-      isRight: false,
-      color: Colors.white,
-      onTap: () => kick(false),
-    ));
-    bottomHandle.add(KickButton(
-      position: Vector2(0.045, 0.01),
-      size: btnSize,
-      isRight: true,
-      color: Colors.white,
-      onTap: () => kick(true),
-    ));
-
-    addAll([topHandle, bottomHandle]);
   }
 
   void updateY(double yPercent) {
@@ -93,6 +45,38 @@ class FoosballRod extends Component {
     // In the sketch the handles seem to be fixed or move?
     // "the left and right movements of the player bars is done with the arrows on each bar."
     // Let's keep handles fixed at top/bottom for now as UI anchors.
+  }
+
+  set rodY(double y) {
+    _currentY = y;
+    for (int i = 0; i < players.length; i++) {
+        players[i].updatePosition(_currentY + playerOffsets[i]);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final baseColor = team == Team.red ? Colors.red : Colors.green;
+    final hsl = HSLColor.fromColor(baseColor);
+    final darkerColor = hsl.withLightness((hsl.lightness - 0.2).clamp(0.0, 1.0)).toColor();
+
+    final strokeWidth = 0.015;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [baseColor, darkerColor],
+      ).createShader(Rect.fromLTWH(x - strokeWidth / 2, -0.1, strokeWidth, pitchHeight + 0.2))
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw the rod shaft
+    canvas.drawLine(
+        Offset(x, -0.1), 
+        Offset(x, pitchHeight + 0.1), 
+        paint
+    );
   }
 
   void kick(bool directionRight) {
