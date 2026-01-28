@@ -19,7 +19,7 @@ class FoosballRod extends Component {
     required this.team,
     required this.playerOffsets,
     required this.pitchHeight,
-  });
+  }) : super(priority: 6);
 
   @override
   Future<void> onLoad() async {
@@ -66,15 +66,16 @@ class FoosballRod extends Component {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: [baseColor, darkerColor],
-      ).createShader(Rect.fromLTWH(x - strokeWidth / 2, -0.1, strokeWidth, pitchHeight + 0.2))
+      ).createShader(Rect.fromLTWH(x - strokeWidth / 2, -0.025, strokeWidth, pitchHeight + 0.05))
       ..strokeWidth = strokeWidth
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
     // Draw the rod shaft
+    // frameThickness is 0.05, so center is at 0.025 offset from pitch edges
     canvas.drawLine(
-        Offset(x, -0.1), 
-        Offset(x, pitchHeight + 0.1), 
+        Offset(x, -0.025), 
+        Offset(x, pitchHeight + 0.025), 
         paint
     );
   }

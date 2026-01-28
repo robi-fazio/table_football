@@ -73,6 +73,9 @@ class Pitch extends BodyComponent<FoosballGame> {
     
     final frameThickness = 0.05;
     final goalHalfWidth = 0.12;
+    final goalDepth = frameThickness * 0.8;
+    final outerGoalHalfWidth = goalHalfWidth * 1.3;
+    final centerY = size.y / 2;
     
     // 2. Draw Top Frame (Trapezoid)
     final topFramePath = Path()
@@ -92,53 +95,44 @@ class Pitch extends BodyComponent<FoosballGame> {
       ..close();
     canvas.drawPath(bottomFramePath, Paint()..color = bottomColor);
 
-    // 4. Draw Left Frame (Split by goal)
-    // Top-Left Segment
-    final topLeftPath = Path()
-      ..moveTo(-frameThickness, -frameThickness) // Top-Outer
-      ..lineTo(0, 0)                           // Inner Corner
-      ..lineTo(0, size.y / 2 - goalHalfWidth)  // Inner Goal Start
-      ..lineTo(-frameThickness, size.y / 2 - goalHalfWidth) // Outer Goal Start
+    // 4. Draw Left Frame (Solid)
+    final leftFramePath = Path()
+      ..moveTo(-frameThickness, -frameThickness)
+      ..lineTo(0, 0)
+      ..lineTo(0, size.y)
+      ..lineTo(-frameThickness, size.y + frameThickness)
       ..close();
-    canvas.drawPath(topLeftPath, Paint()..color = leftColor);
-    
-    // Bottom-Left Segment
-    final bottomLeftPath = Path()
-      ..moveTo(0, size.y / 2 + goalHalfWidth)  // Inner Goal End
-      ..lineTo(0, size.y)                      // Inner Corner
-      ..lineTo(-frameThickness, size.y + frameThickness) // Bottom-Outer
-      ..lineTo(-frameThickness, size.y / 2 + goalHalfWidth) // Outer Goal End
-      ..close();
-    canvas.drawPath(bottomLeftPath, Paint()..color = leftColor);
+    canvas.drawPath(leftFramePath, Paint()..color = leftColor);
 
-    // 5. Draw Right Frame (Split by goal)
-    // Top-Right Segment
-    final topRightPath = Path()
-      ..moveTo(size.x + frameThickness, -frameThickness) // Top-Outer
-      ..lineTo(size.x, 0)                              // Inner Corner
-      ..lineTo(size.x, size.y / 2 - goalHalfWidth)     // Inner Goal Start
-      ..lineTo(size.x + frameThickness, size.y / 2 - goalHalfWidth) // Outer Goal Start
+    // 5. Draw Right Frame (Solid)
+    final rightFramePath = Path()
+      ..moveTo(size.x + frameThickness, -frameThickness)
+      ..lineTo(size.x, 0)
+      ..lineTo(size.x, size.y)
+      ..lineTo(size.x + frameThickness, size.y + frameThickness)
       ..close();
-    canvas.drawPath(topRightPath, Paint()..color = rightColor);
+    canvas.drawPath(rightFramePath, Paint()..color = rightColor);
 
-    // Bottom-Right Segment
-    final bottomRightPath = Path()
-      ..moveTo(size.x, size.y / 2 + goalHalfWidth)     // Inner Goal End
-      ..lineTo(size.x, size.y)                         // Inner Corner
-      ..lineTo(size.x + frameThickness, size.y + frameThickness) // Bottom-Outer
-      ..lineTo(size.x + frameThickness, size.y / 2 + goalHalfWidth) // Outer Goal End
-      ..close();
-    canvas.drawPath(bottomRightPath, Paint()..color = rightColor);
-
-    // 6. Draw Goal Backgrounds (Black, extending outwards)
-    final goalDepth = 0.05;
+    // 6. Draw Goal Backgrounds (Trapezoids, sitting inside the frame)
     final goalPaint = Paint()..color = Colors.black;
     
     // Left Goal
-    canvas.drawRect(Rect.fromLTWH(-goalDepth, size.y / 2 - goalHalfWidth, goalDepth, goalHalfWidth * 2), goalPaint);
+    final goalPathLeft = Path()
+      ..moveTo(0, centerY - goalHalfWidth)
+      ..lineTo(0, centerY + goalHalfWidth)
+      ..lineTo(-goalDepth, centerY + outerGoalHalfWidth)
+      ..lineTo(-goalDepth, centerY - outerGoalHalfWidth)
+      ..close();
+    canvas.drawPath(goalPathLeft, goalPaint);
     
     // Right Goal
-    canvas.drawRect(Rect.fromLTWH(size.x, size.y / 2 - goalHalfWidth, goalDepth, goalHalfWidth * 2), goalPaint);
+    final goalPathRight = Path()
+      ..moveTo(size.x, centerY - goalHalfWidth)
+      ..lineTo(size.x, centerY + goalHalfWidth)
+      ..lineTo(size.x + goalDepth, centerY + outerGoalHalfWidth)
+      ..lineTo(size.x + goalDepth, centerY - outerGoalHalfWidth)
+      ..close();
+    canvas.drawPath(goalPathRight, goalPaint);
 
     // 3. Draw Pitch Background inside
     if (_backgroundSprite != null) {

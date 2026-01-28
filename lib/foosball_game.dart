@@ -24,6 +24,9 @@ class FoosballGame extends Forge2DGame implements ContactListener {
   
   late RoundArrowButton redLeftButton;
   late RoundArrowButton redRightButton;
+
+  late VerticalScroll greenSlider;
+  late VerticalScroll redSlider;
   
   final double pitchRightX = 1.2;
   // Symmetrical margin for left side?
@@ -42,7 +45,7 @@ class FoosballGame extends Forge2DGame implements ContactListener {
   // ...
 
   void _updateButtonPositions() {
-    if (!leftButton.isLoaded || !rightButton.isLoaded || !redLeftButton.isLoaded || !redRightButton.isLoaded) return;
+    if (!leftButton.isLoaded || !rightButton.isLoaded || !redLeftButton.isLoaded || !redRightButton.isLoaded || !greenSlider.isLoaded || !redSlider.isLoaded) return;
     
     // Get the actual visible area of the world
     final visibleRect = camera.visibleWorldRect;
@@ -76,6 +79,13 @@ class FoosballGame extends Forge2DGame implements ContactListener {
     
     redLeftButton.position.setValues(leftMarginCenterX - (horizontalSpacing / 2), topButtonY);
     redRightButton.position.setValues(leftMarginCenterX + (horizontalSpacing / 2), topButtonY);
+
+    // Sliders positioning
+    // Vertically centered in the viewport
+    final viewportCenterY = visibleRect.center.dy;
+    
+    greenSlider.position.setValues(leftMarginCenterX, viewportCenterY);
+    redSlider.position.setValues(rightMarginCenterX, viewportCenterY);
   }
 
   @override
@@ -99,55 +109,32 @@ class FoosballGame extends Forge2DGame implements ContactListener {
     world.add(PitchForeground(pitchSize: pitchSize));
     
     // Sliders stay on the GAME (HUD/Screen space)
-    // Sliders stay on the GAME (HUD/Screen space)
-    world.add(VerticalScroll(
-      initialPosition: Vector2(-0.075, 0.4), // Centered left
+    greenSlider = VerticalScroll(
+      initialPosition: Vector2.zero(), 
       width: 0.045,
       height: 0.4,
-      minTopY: 0.1,
-      maxTopY: 0.3, 
       onScroll: (progress) {
-         // Progress 0.0 -> Top (Y=0.1) -> Rods Top (Limit)
-         // Progress 1.0 -> Bottom (Y=0.3) -> Rods Bottom (Limit)
-         
-         // Rod 3 Limits: 
-         // Top: Figures touch top wall. Offset is +/- 0.2.
-         // Top Wall Y = 0. Pitch Top Y = 0.
-         // Figure Top Y = RodY - 0.2 = 0 => RodY = 0.2.
-         
-         // Bottom: Figures touch bottom wall.
-         // Bottom Wall Y = 0.8.
-         // Figure Bottom Y = RodY + 0.2 = 0.8 => RodY = 0.6.
-         
-         // Range: [0.247, 0.553] to account for foot size (0.045) and margin (0.002)
-         // Min Y = 0.247
-         // Max Y = 0.553
-         // Range Width = 0.553 - 0.247 = 0.306
-         
          final newY = 0.247 + (progress * 0.306);
-         
          for (var rod in greenRods) {
            rod.rodY = newY;
          }
       },
-    ));
+    );
+    world.add(greenSlider);
     
-    world.add(VerticalScroll(
-      initialPosition: Vector2(pitchSize.x + 0.075, 0.4), // Mirrored to right: 1.2 + 0.075
+    redSlider = VerticalScroll(
+      initialPosition: Vector2.zero(),
       width: 0.045,
       height: 0.4,
-      minTopY: 0.1,
-      maxTopY: 0.3, 
       color: Colors.red,
       onScroll: (progress) {
-         // Same limits as green side: [0.247, 0.553]
          final newY = 0.247 + (progress * 0.306);
-         
          for (var rod in redRods) {
            rod.rodY = newY;
          }
       },
-    ));
+    );
+    world.add(redSlider);
 
     // Initialize Rods
     greenRods = [
