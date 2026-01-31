@@ -28,6 +28,8 @@ class FoosballGame extends Forge2DGame implements ContactListener {
   late VerticalScroll greenSlider;
   late VerticalScroll redSlider;
   
+  // No score text
+  
   final double pitchRightX = 1.2;
   // Symmetrical margin for left side?
   // Pitch is centered at 0? No, walls are (0,0) to (size.x, size.y).
@@ -155,16 +157,16 @@ class FoosballGame extends Forge2DGame implements ContactListener {
       size: buttonSize,
       isRight: false,
       onPressed: () {
-        print("Left arrow pressed");
         for (var rod in greenRods) {
+          rod.tiltBack();
           for (var player in rod.players) {
             player.swapSprite(true);
           }
         }
       },
       onReleased: () {
-        print("Left arrow released");
         for (var rod in greenRods) {
+          rod.resetTilt();
           for (var player in rod.players) {
             player.swapSprite(false);
           }
@@ -177,16 +179,16 @@ class FoosballGame extends Forge2DGame implements ContactListener {
       size: buttonSize,
       isRight: true,
       onPressed: () {
-        print("Right arrow pressed");
         for (var rod in greenRods) {
+          rod.kick(true);
           for (var player in rod.players) {
             player.swapToKick(true);
           }
         }
       },
       onReleased: () {
-        print("Right arrow released");
         for (var rod in greenRods) {
+          rod.resetTilt();
           for (var player in rod.players) {
             player.swapToKick(false);
           }
@@ -204,15 +206,16 @@ class FoosballGame extends Forge2DGame implements ContactListener {
       isRight: false,
       color: Colors.red,
       onPressed: () {
-        print("Red Left arrow pressed");
         for (var rod in redRods) {
+            rod.kick(false);
             for (var player in rod.players) {
-                player.swapToKick(true); // Left Arrow -> Kick (Inverted)
+                player.swapToKick(true); 
             }
         }
       },
       onReleased: () {
         for (var rod in redRods) {
+            rod.resetTilt();
             for (var player in rod.players) {
                 player.swapToKick(false);
             }
@@ -226,15 +229,16 @@ class FoosballGame extends Forge2DGame implements ContactListener {
       isRight: true,
       color: Colors.red,
       onPressed: () {
-        print("Red Right arrow pressed");
         for (var rod in redRods) {
+            rod.tiltBack();
             for (var player in rod.players) {
-                player.swapSprite(true); // Right Arrow -> Back (Inverted)
+                player.swapSprite(true); 
             }
         }
       },
       onReleased: () {
         for (var rod in redRods) {
+            rod.resetTilt();
             for (var player in rod.players) {
                 player.swapSprite(false);
             }
@@ -245,6 +249,8 @@ class FoosballGame extends Forge2DGame implements ContactListener {
     world.add(redLeftButton);
     world.add(redRightButton);
     
+    // Scores removed (artefacts)
+
     _updateButtonPositions();
 
 
@@ -261,7 +267,22 @@ class FoosballGame extends Forge2DGame implements ContactListener {
   }
 
   void _resetBall() {
-    world.add(FoosballBall(initialPosition: Vector2(0.6, 0.4)));
+    // Remove existing ball if any
+    final existingBalls = world.children.whereType<FoosballBall>();
+    for (var ball in existingBalls) {
+        ball.removeFromParent();
+    }
+
+    final ball = FoosballBall(initialPosition: Vector2(0.6, 0.4));
+    world.add(ball);
+    
+    // Give it a tiny kick to start
+    Future.delayed(const Duration(milliseconds: 100), () {
+        if (ball.isLoaded) {
+            final random = (DateTime.now().millisecond / 1000.0) - 0.5;
+            ball.body.applyLinearImpulse(Vector2(random * 0.05, 0.02));
+        }
+    });
   }
 
   @override
@@ -273,17 +294,25 @@ class FoosballGame extends Forge2DGame implements ContactListener {
   }
 
 
+  bool _isGoalResetting = false;
+
   void _handleGoal(Team team) {
-    if (team == Team.green) {
-      greenScore++;
-    } else {
-      redScore++;
-    }
-    print("Score: Green $greenScore - Red $redScore");
+    if (_isGoalResetting) return;
+    _isGoalResetting = true;
+
+    print("GOAL! Ball entered ${team == Team.green ? 'Green' : 'Red'} Goal");
     
-    // Reset ball after short delay
-    Future.delayed(const Duration(seconds: 1), () {
+    // Give time for the ball to physically enter the pocket
+    Future.delayed(const Duration(milliseconds: 800), () {
+        if (team == Team.green) {
+          greenScore++;
+        } else {
+          redScore++;
+        }
+        print("Score updated: Green $greenScore - Red $redScore");
+        
         _resetBall();
+        _isGoalResetting = false;
     });
   }
 

@@ -27,23 +27,37 @@ class Pitch extends BodyComponent<FoosballGame> {
     final body = world.createBody(bodyDef);
 
     // Wall shapes
+    // Top and Bottom
     _createWall(body, Vector2(0, 0), Vector2(size.x, 0));
     _createWall(body, Vector2(0, size.y), Vector2(size.x, size.y));
     
     final goalHalfWidth = 0.12; 
+    final frameThickness = 0.05;
+    final goalDepth = frameThickness * 0.8;
+    final outerGoalHalfWidth = goalHalfWidth * 1.3;
+    final centerY = size.y / 2;
     
-    // Left Goal area
-    _createWall(body, Vector2(0, 0), Vector2(0, size.y / 2 - goalHalfWidth));
-    _createWall(body, Vector2(0, size.y / 2 + goalHalfWidth), Vector2(0, size.y));
+    // Left side walls (split by goal)
+    _createWall(body, Vector2(0, 0), Vector2(0, centerY - goalHalfWidth));
+    _createWall(body, Vector2(0, centerY + goalHalfWidth), Vector2(0, size.y));
     
-    // Right Goal area
-    _createWall(body, Vector2(size.x, 0), Vector2(size.x, size.y / 2 - goalHalfWidth));
-    _createWall(body, Vector2(size.x, size.y / 2 + goalHalfWidth), Vector2(size.x, size.y));
+    // Left Goal Pocket Walls
+    _createWall(body, Vector2(0, centerY - goalHalfWidth), Vector2(-goalDepth, centerY - outerGoalHalfWidth));
+    _createWall(body, Vector2(0, centerY + goalHalfWidth), Vector2(-goalDepth, centerY + outerGoalHalfWidth));
+    _createWall(body, Vector2(-goalDepth, centerY - outerGoalHalfWidth), Vector2(-goalDepth, centerY + outerGoalHalfWidth));
+    
+    // Right side walls (split by goal)
+    _createWall(body, Vector2(size.x, 0), Vector2(size.x, centerY - goalHalfWidth));
+    _createWall(body, Vector2(size.x, centerY + goalHalfWidth), Vector2(size.x, size.y));
+    
+    // Right Goal Pocket Walls
+    _createWall(body, Vector2(size.x, centerY - goalHalfWidth), Vector2(size.x + goalDepth, centerY - outerGoalHalfWidth));
+    _createWall(body, Vector2(size.x, centerY + goalHalfWidth), Vector2(size.x + goalDepth, centerY + outerGoalHalfWidth));
+    _createWall(body, Vector2(size.x + goalDepth, centerY - outerGoalHalfWidth), Vector2(size.x + goalDepth, centerY + outerGoalHalfWidth));
 
-    // Goal Sensors
-    _createGoalSensor(body, Vector2(-0.02, size.y / 2), goalHalfWidth, Team.red); // If ball hits left, Red (P2) scores? No, P1 usually shoots left.
-    // Let's say: Left Goal -> Red scores, Right Goal -> Green scores.
-    _createGoalSensor(body, Vector2(size.x + 0.02, size.y / 2), goalHalfWidth, Team.green);
+    // Goal Sensors (At the back of the pockets)
+    _createGoalSensor(body, Vector2(-goalDepth + 0.01, centerY), outerGoalHalfWidth * 0.9, Team.red); 
+    _createGoalSensor(body, Vector2(size.x + goalDepth - 0.01, centerY), outerGoalHalfWidth * 0.9, Team.green);
 
     return body;
   }
@@ -56,7 +70,7 @@ class Pitch extends BodyComponent<FoosballGame> {
 
   void _createWall(Body body, Vector2 start, Vector2 end) {
     final shape = EdgeShape()..set(start, end);
-    final fixtureDef = FixtureDef(shape, friction: 0.3, restitution: 0.4);
+    final fixtureDef = FixtureDef(shape, friction: 0.0, restitution: 0.8);
     body.createFixture(fixtureDef);
   }
 

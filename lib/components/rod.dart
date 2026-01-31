@@ -85,4 +85,16 @@ class FoosballRod extends Component {
       player.kick(directionRight);
     }
   }
+
+  void tiltBack() {
+    for (var player in players) {
+      player.tiltBack();
+    }
+  }
+
+  void resetTilt() {
+    for (var player in players) {
+      player.resetTilt();
+    }
+  }
 }
